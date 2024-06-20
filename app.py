@@ -25,26 +25,55 @@ def list_devices():
 
 def restart_device(ip):
     try: 
-        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False)
+        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
         conn = zk.connect()
         conn.restart()
         conn.disconnect()
         print(f"Device at IP {ip} has been restarted.")
+    
     except Exception as e:
         print(e)
+   
+def info(ip):
+    try:
+        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
+        conn = zk.connect()
+        conn.disable_device()
+        serial_number = conn.get_serialnumber()
+        machine_name  = conn.get_device_name()
+        print(f"            IP  : {ip}")
+        print(f" Serial Number  : {serial_number}")
+        print(f"  Machine Name  : {machine_name}")
+        print(f"Firmware Version:{conn.get_firmware_version()}")
+        print(f"MAC Address     :{conn.get_mac()}")
+    except Exception as e:
+        print(e)
+    finally:
+        if conn:
+            conn.enable_device()  
+            conn.disconnect()
+
+
+# #attendances = conn.get_attendance()
+
        
 
 def list_users(ip):
     try:
-        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False)
+        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
         conn = zk.connect()
+        conn.test_voice() # Say Thank you
+        conn.disable_device()
         users = conn.get_users()
         print(f"Users for device at IP {ip}:")
         for user in users:
-            print(f"ID: {user.user_id}, Name: {user.name}, Privilege: {user.privilege}, Password: {user.password}, Group ID: {user.group_id}, Card: {user.card}")
-        conn.disconnect()
+            print(f"ID: {user.user_id}, Name: {user.name}, Privilege: {user.privilege}, Password: {user.password}, Group ID: {user.group_id}, Card: {user.card}")   
     except Exception as e:
         print(e)
+    finally:
+        if conn:
+            conn.enable_device()  
+            conn.disconnect()
 
 def main():
     welcome()
@@ -54,6 +83,7 @@ def main():
             print("***** list all devices                               -list")
             print("***** restart device: restart IP address example,    -restart 192.168.23.212")
             print("***** list all users in device -userlist IP example, -userlist 192.168.23.212")
+            print("***** devise info                                    -info 192.168.23.212")
         elif userInput.lower() == "-list":
             list_devices()
         elif userInput.lower().startswith("-restart "):
@@ -62,6 +92,9 @@ def main():
         elif userInput.lower().startswith("-userlist "):
             ip = userInput.split(" ")[1]
             list_users(ip)
+        elif userInput.lower().startswith("-info "):
+            ip = userInput.split(" ")[1]
+            info(ip)
         elif userInput.lower() == "exit":
             break
 
