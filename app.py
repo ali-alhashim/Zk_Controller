@@ -1,4 +1,5 @@
 from zk import ZK, const
+from datetime import datetime
 
 zkDevicesList = [
     {
@@ -12,6 +13,10 @@ zkDevicesList = [
         "port": "4370"
     }
 ]
+
+
+
+
 
 def welcome():
     print("***** ZK CLI APP")
@@ -33,7 +38,21 @@ def restart_device(ip):
     
     except Exception as e:
         print(e)
-   
+
+
+def setTimeDate(ip, timeDate):
+    #set_time
+    #"2024-06-20 14:55:00"
+
+    try:
+        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
+        conn = zk.connect()
+        date_format = "%Y-%m-%d %H:%M:%S"
+        CtimeDate = datetime.strptime(timeDate, date_format).timestamp()
+        conn.set_time(timestamp=CtimeDate)
+    except Exception as e:
+        print(e)
+
 def info(ip):
     try:
         zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
@@ -41,11 +60,13 @@ def info(ip):
         conn.disable_device()
         serial_number = conn.get_serialnumber()
         machine_name  = conn.get_device_name()
-        print(f"            IP  : {ip}")
-        print(f" Serial Number  : {serial_number}")
-        print(f"  Machine Name  : {machine_name}")
-        print(f"Firmware Version:{conn.get_firmware_version()}")
-        print(f"MAC Address     :{conn.get_mac()}")
+        print(f"            IP   : {ip}")
+        print(f" Serial Number   : {serial_number}")
+        print(f"  Machine Name   : {machine_name}")
+        print(f"Firmware Version :{conn.get_firmware_version()}")
+        print(f"MAC Address      :{conn.get_mac()}")
+        print(f"the memory ussage:{conn.read_sizes()}")
+        print(f"machine's time   :{conn.get_time()}")
     except Exception as e:
         print(e)
     finally:
@@ -84,6 +105,7 @@ def main():
             print("***** restart device: restart IP address example,    -restart 192.168.23.212")
             print("***** list all users in device -userlist IP example, -userlist 192.168.23.212")
             print("***** devise info                                    -info 192.168.23.212")
+            print("***** set Time %Y-%m-%d %H:%M:%S                     -setTime 192.168.23.212 2024-06-20 14:55:00")
         elif userInput.lower() == "-list":
             list_devices()
         elif userInput.lower().startswith("-restart "):
@@ -95,6 +117,10 @@ def main():
         elif userInput.lower().startswith("-info "):
             ip = userInput.split(" ")[1]
             info(ip)
+        elif userInput.lower().startswith("-setTime "):
+            ip = userInput.split(" ")[1]
+            timeDate = userInput.split(" ")[2]
+            setTimeDate(ip, timeDate)
         elif userInput.lower() == "exit":
             break
 
