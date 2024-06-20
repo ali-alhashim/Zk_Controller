@@ -11,6 +11,11 @@ zkDevicesList = [
         "deviceName": "DMM-Accounting 2nd Floor",
         "IP": "192.168.23.212",
         "port": "4370"
+    },
+    {
+        "deviceName": "DMM-HR",
+        "IP": "172.16.37.51",
+        "port": "4370"
     }
 ]
 
