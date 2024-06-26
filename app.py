@@ -1,6 +1,9 @@
 from zk import ZK, const
 from datetime import datetime
 
+################################################################################## Config
+
+##### Devices List
 zkDevicesList = [
     {
         "deviceName": "DMM-IT 4th Floor",
@@ -19,7 +22,11 @@ zkDevicesList = [
     }
 ]
 
+##### 
 
+Default_Port     = 4370
+Default_Password = 0
+###############################################################################
 
 
 
@@ -35,7 +42,7 @@ def list_devices():
 
 def restart_device(ip):
     try: 
-        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
+        zk = ZK(ip, port=Default_Port, password=Default_Password, force_udp=False, ommit_ping=False, timeout=5)
         conn = zk.connect()
         conn.restart()
         conn.disconnect()
@@ -48,19 +55,21 @@ def restart_device(ip):
 def setTimeDate(ip, timeDate):
     #set_time
     #"2024-06-20 14:55:00"
-
+    
     try:
-        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
+        zk = ZK(ip, port=Default_Port, password=Default_Password, force_udp=False, ommit_ping=False, timeout=5)
         conn = zk.connect()
         date_format = "%Y-%m-%d %H:%M:%S"
         CtimeDate = datetime.strptime(timeDate, date_format).timestamp()
         conn.set_time(timestamp=CtimeDate)
+        print(f"...set TimeDate:{ip} {timeDate} Done.")
     except Exception as e:
+        print("example:  -setTime 192.168.23.212 2024-06-20 14:55:00")
         print(e)
 
 def info(ip):
     try:
-        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
+        zk = ZK(ip, port=Default_Port, password=Default_Password, force_udp=False, ommit_ping=False, timeout=5)
         conn = zk.connect()
         conn.disable_device()
         serial_number = conn.get_serialnumber()
@@ -86,20 +95,24 @@ def info(ip):
 
 def list_users(ip):
     try:
-        zk = ZK(ip, port=4370, password=0, force_udp=False, ommit_ping=False, timeout=5)
+        zk = ZK(ip, port=Default_Port, password=Default_Password, force_udp=False, ommit_ping=False, timeout=5)
         conn = zk.connect()
         conn.test_voice() # Say Thank you
         conn.disable_device()
         users = conn.get_users()
         print(f"Users for device at IP {ip}:")
+        
         for user in users:
-            print(f"ID: {user.user_id}, Name: {user.name}, Privilege: {user.privilege}, Password: {user.password}, Group ID: {user.group_id}, Card: {user.card}")   
+            
+            print(f"UID:{user.uid}-ID:{user.user_id}-Name:{user.name}-Privilege:{user.privilege}-Password:{user.password}-Group ID:{user.group_id}-Card:{user.card}")   
     except Exception as e:
         print(e)
     finally:
         if conn:
             conn.enable_device()  
             conn.disconnect()
+            print("#################################")
+            print(f"Total users:{len(users)}")
 
 def main():
     welcome()
@@ -109,7 +122,7 @@ def main():
             print("***** list all devices                               -list")
             print("***** restart device: restart IP address example,    -restart 192.168.23.212")
             print("***** list all users in device -userlist IP example, -userlist 192.168.23.212")
-            print("***** devise info                                    -info 192.168.23.212")
+            print("***** device info                                    -info 192.168.23.212")
             print("***** set Time %Y-%m-%d %H:%M:%S                     -setTime 192.168.23.212 2024-06-20 14:55:00")
         elif userInput.lower() == "-list":
             list_devices()
