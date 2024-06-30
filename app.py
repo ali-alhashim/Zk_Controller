@@ -103,20 +103,31 @@ def get_time_sheet(badge_id, start_date, end_date):
             zk = ZK(device['ip'], port=Default_Port, password=Default_Password, force_udp=False, ommit_ping=False, timeout=5)
             conn = zk.connect()
             print(f'Connected to device {device["ip"]}')
-            attendance = conn.get_attendance()
 
-            user_attendance = [
-                record for record in attendance 
-                if record.user_id == badge_id and start_date <= record.timestamp <= end_date
-            ]
-            
-            for record in user_attendance:
-                timeSheet.append({
-                    'user_id': record.user_id,
-                    'timestamp': record.timestamp,
-                    'status': record.status,
-                    'punch': record.punch
-                })
+             # Incremental log fetching
+            chunk_size = 100  # Define the chunk size
+            start = 0
+
+            while True:
+                # Get a chunk of attendance records
+                attendance = conn.get_attendance(start=start, size=chunk_size)
+                if not attendance:
+                    break  # Exit the loop if no more records are returned
+
+                user_attendance = [
+                    record for record in attendance 
+                    if record.user_id == badge_id and start_date <= record.timestamp <= end_date
+                ]
+                
+                for record in user_attendance:
+                    timeSheet.append({
+                        'user_id': record.user_id,
+                        'timestamp': record.timestamp,
+                        'status': record.status,
+                        'punch': record.punch
+                    })
+                    print(f"'user_id':{ record.user_id}, 'timestamp': {record.timestamp}, 'status': {record.status}, 'punch': {record.punch}")
+                start += chunk_size  # Increment the start index for the next chunk
             conn.disconnect()
         except Exception as e:
             print(f"Error retrieving timesheet for device at IP {device['ip']}: {e}")
@@ -124,6 +135,13 @@ def get_time_sheet(badge_id, start_date, end_date):
     # Print the timesheet
     for entry in timeSheet:
         print(entry)
+
+def siren_voice(ip):
+    #11 Beep siren
+    zk = ZK(ip, port=Default_Port, password=Default_Password, force_udp=False, ommit_ping=False, timeout=5)
+    conn = zk.connect()
+    conn.test_voice(11)
+    conn.disconnect()
 
 def main():
     welcome()
@@ -136,6 +154,7 @@ def main():
             print("***** Device info                                    -info 192.168.23.212")
             print("***** Set Time %Y-%m-%d %H:%M:%S                     -settime 192.168.23.212 2024-06-20 14:55:00")
             print("***** Get Timesheet for user by range of date        -gettimesheet 1111 2024-05-16 2024-06-15")
+            print("***** Test  siren voice                              -siren 192.168.23.212")
         elif user_input.lower() == "-list":
             list_devices()
         elif user_input.lower().startswith("-restart "):
